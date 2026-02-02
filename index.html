@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>カセットデッキ・シミュレーター with Audio Player</title>
+    <link rel="stylesheet" href="audio-deck-style.css">
+</head>
+<body>
+    <div class="container">
+        <!-- タイトル -->
+        <div class="title-bar">
+            <div class="brand-logo">
+                <svg width="40" height="40" viewBox="0 0 40 40">
+                    <rect x="5" y="10" width="30" height="20" fill="none" stroke="#888" stroke-width="2"/>
+                    <circle cx="15" cy="20" r="3" fill="#888"/>
+                    <circle cx="25" cy="20" r="3" fill="#888"/>
+                </svg>
+            </div>
+            <h1 class="deck-title">PRECISION DECK 3000</h1>
+        </div>
+
+        <!-- ファイル選択エリア -->
+        <div class="file-select-area">
+            <label for="audioFile" class="file-select-label">
+                <span class="file-icon">🎵</span>
+                <span class="file-text">音声ファイルを選択</span>
+                <span class="file-hint">(MP3, WAV, OGG, etc.)</span>
+            </label>
+            <input type="file" id="audioFile" accept="audio/*" style="display: none;">
+            <div class="file-info" id="fileInfo">ファイルが選択されていません</div>
+        </div>
+
+        <!-- メインデッキ本体 -->
+        <div class="deck-body">
+            <!-- 左側: カセット窓エリア -->
+            <div class="cassette-section">
+                <div class="deck-label">STEREO CASSETTE DECK</div>
+                
+                <!-- カセット窓 - 精密カセットSVGを組み込み -->
+                <div class="cassette-window" id="cassetteWindow">
+                    <div class="window-frame">
+                        <!-- 精密カセットテープSVG -->
+                        <svg id="cassette-tape-svg" viewBox="0 0 720 450" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet">
+                            <defs>
+                                <!-- 透明筐体のグラデーション -->
+                                <linearGradient id="clearPlasticGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" style="stop-color:rgba(255,255,255,0.85);stop-opacity:1" />
+                                    <stop offset="30%" style="stop-color:rgba(245,245,250,0.75);stop-opacity:1" />
+                                    <stop offset="70%" style="stop-color:rgba(240,240,245,0.7);stop-opacity:1" />
+                                    <stop offset="100%" style="stop-color:rgba(230,230,240,0.8);stop-opacity:1" />
+                                </linearGradient>
+                                
+                                <!-- オレンジラベルのグラデーション -->
+                                <linearGradient id="orangeLabelGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" style="stop-color:#FF7A00;stop-opacity:1" />
+                                    <stop offset="50%" style="stop-color:#FF8C1A;stop-opacity:1" />
+                                    <stop offset="100%" style="stop-color:#FF6600;stop-opacity:1" />
+                                </linearGradient>
+                                
+                                <!-- リールの金属グラデーション -->
+                                <radialGradient id="reelMetalGrad">
+                                    <stop offset="0%" style="stop-color:#E0E0E0;stop-opacity:1" />
+                                    <stop offset="40%" style="stop-color:#C0C0C5;stop-opacity:1" />
+                                    <stop offset="80%" style="stop-color:#A0A0A8;stop-opacity:1" />
+                                    <stop offset="100%" style="stop-color:#808088;stop-opacity:1" />
+                                </radialGradient>
+                                
+                                <!-- テープの茶色グラデーション -->
+                                <linearGradient id="tapeGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                                    <stop offset="0%" style="stop-color:rgba(80,50,30,0.85);stop-opacity:1" />
+                                    <stop offset="50%" style="stop-color:rgba(100,65,40,0.95);stop-opacity:1" />
+                                    <stop offset="100%" style="stop-color:rgba(80,50,30,0.85);stop-opacity:1" />
+                                </linearGradient>
+                            </defs>
+                            
+                            <!-- カセット筐体 -->
+                            <g id="cassette-body">
+                                <rect x="20" y="20" width="680" height="410" rx="12" 
+                                      fill="url(#clearPlasticGrad)" 
+                                      stroke="rgba(200,200,220,0.6)" 
+                                      stroke-width="2"/>
+                                <g id="internal-ribs" opacity="0.1">
+                                    <line x1="100" y1="80" x2="100" y2="370" stroke="#888" stroke-width="1"/>
+                                    <line x1="200" y1="80" x2="200" y2="370" stroke="#888" stroke-width="1"/>
+                                    <line x1="520" y1="80" x2="520" y2="370" stroke="#888" stroke-width="1"/>
+                                    <line x1="620" y1="80" x2="620" y2="370" stroke="#888" stroke-width="1"/>
+                                </g>
+                            </g>
+                            
+                            <!-- 4隅のネジ -->
+                            <g id="corner-screws">
+                                <circle cx="50" cy="50" r="6" fill="#2a2a2a"/>
+                                <line x1="50" y1="46" x2="50" y2="54" stroke="#444" stroke-width="1"/>
+                                <line x1="46" y1="50" x2="54" y2="50" stroke="#444" stroke-width="1"/>
+                                
+                                <circle cx="670" cy="50" r="6" fill="#2a2a2a"/>
+                                <line x1="670" y1="46" x2="670" y2="54" stroke="#444" stroke-width="1"/>
+                                <line x1="666" y1="50" x2="674" y2="50" stroke="#444" stroke-width="1"/>
+                                
+                                <circle cx="50" cy="400" r="6" fill="#2a2a2a"/>
+                                <line x1="50" y1="396" x2="50" y2="404" stroke="#444" stroke-width="1"/>
+                                <line x1="46" y1="400" x2="54" y2="400" stroke="#444" stroke-width="1"/>
+                                
+                                <circle cx="670" cy="400" r="6" fill="#2a2a2a"/>
+                                <line x1="670" y1="396" x2="670" y2="404" stroke="#444" stroke-width="1"/>
+                                <line x1="666" y1="400" x2="674" y2="400" stroke="#444" stroke-width="1"/>
+                            </g>
+                            
+                            <!-- 上部ラベル領域 -->
+                            <g id="top-label-area">
+                                <rect x="80" y="50" width="560" height="60" 
+                                      fill="rgba(250,250,255,0.9)" 
+                                      stroke="rgba(180,180,200,0.6)" 
+                                      stroke-width="1"/>
+                                <line x1="90" y1="70" x2="630" y2="70" stroke="rgba(200,200,220,0.5)" stroke-width="0.5"/>
+                                <line x1="90" y1="85" x2="630" y2="85" stroke="rgba(200,200,220,0.5)" stroke-width="0.5"/>
+                                <line x1="90" y1="100" x2="630" y2="100" stroke="rgba(200,200,220,0.5)" stroke-width="0.5"/>
+                                <text x="95" y="67" font-family="Arial" font-size="10" fill="rgba(100,100,120,0.6)">INDEX</text>
+                            </g>
+                            
+                            <!-- オレンジラベル -->
+                            <g id="orange-label">
+                                <rect x="100" y="140" width="520" height="80" fill="url(#orangeLabelGrad)"/>
+                                <rect x="100" y="140" width="520" height="25" fill="rgba(255,255,255,0.25)"/>
+                                <text x="140" y="200" font-family="Arial Black" font-size="65" font-weight="bold" fill="#000000">A</text>
+                                <text x="530" y="205" font-family="Arial" font-size="48" font-weight="bold" fill="#FFFFFF" stroke="#FF6600" stroke-width="1">90</text>
+                                <text x="250" y="210" font-family="Arial" font-size="11" fill="#FFFFFF">TYPE I (NORMAL) / POSITION</text>
+                            </g>
+                            
+                            <!-- テープ窓 -->
+                            <rect x="180" y="250" width="360" height="110" fill="rgba(0,0,0,0.85)" stroke="#1a1a1a" stroke-width="3"/>
+                            
+                            <!-- 左リール -->
+                            <g id="cassette-reel-left" transform="translate(260, 305)">
+                                <circle id="cassette-tape-pack-left" r="32" fill="url(#tapeGrad)" stroke="rgba(60,40,25,0.8)" stroke-width="1"/>
+                                <circle r="38" fill="url(#reelMetalGrad)" stroke="rgba(100,100,110,0.8)" stroke-width="1.5"/>
+                                <circle r="8" fill="#1a1a1a"/>
+                                <g id="cassette-reel-left-teeth">
+                                    <path d="M 0,-38 L 3,-45 L -3,-45 Z" fill="rgba(80,80,90,0.9)"/>
+                                    <path d="M 0,-38 L 3,-45 L -3,-45 Z" fill="rgba(80,80,90,0.9)" transform="rotate(36)"/>
+                                    <path d="M 0,-38 L 3,-45 L -3,-45 Z" fill="rgba(80,80,90,0.9)" transform="rotate(72)"/>
+                                    <path d="M 0,-38 L 3,-45 L -3,-45 Z" fill="rgba(80,80,90,0.9)" transform="rotate(108)"/>
+                                    <path d="M 0,-38 L 3,-45 L -3,-45 Z" fill="rgba(80,80,90,0.9)" transform="rotate(144)"/>
+                                    <path d="M 0,-38 L 3,-45 L -3,-45 Z" fill="rgba(80,80,90,0.9)" transform="rotate(180)"/>
+                                    <path d="M 0,-38 L 3,-45 L -3,-45 Z" fill="rgba(80,80,90,0.9)" transform="rotate(216)"/>
+                                    <path d="M 0,-38 L 3,-45 L -3,-45 Z" fill="rgba(80,80,90,0.9)" transform="rotate(252)"/>
+                                    <path d="M 0,-38 L 3,-45 L -3,-45 Z" fill="rgba(80,80,90,0.9)" transform="rotate(288)"/>
+                                    <path d="M 0,-38 L 3,-45 L -3,-45 Z" fill="rgba(80,80,90,0.9)" transform="rotate(324)"/>
+                                </g>
+                            </g>
+                            
+                            <!-- 右リール -->
+                            <g id="cassette-reel-right" transform="translate(460, 305)">
+                                <circle id="cassette-tape-pack-right" r="18" fill="url(#tapeGrad)" stroke="rgba(60,40,25,0.8)" stroke-width="1"/>
+                                <circle r="38" fill="url(#reelMetalGrad)" stroke="rgba(100,100,110,0.8)" stroke-width="1.5"/>
+                                <circle r="8" fill="#1a1a1a"/>
+                                <g id="cassette-reel-right-teeth">
+                                    <path d="M 0,-38 L 3,-45 L -3,-45 Z" fill="rgba(80,80,90,0.9)"/>
+                                    <path d="M 0,-38 L 3,-45 L -3,-45 Z" fill="rgba(80,80,90,0.9)" transform="rotate(36)"/>
+                                    <path d="M 0,-38 L 3,-45 L -3,-45 Z" fill="rgba(80,80,90,0.9)" transform="rotate(72)"/>
+                                    <path d="M 0,-38 L 3,-45 L -3,-45 Z" fill="rgba(80,80,90,0.9)" transform="rotate(108)"/>
+                                    <path d="M 0,-38 L 3,-45 L -3,-45 Z" fill="rgba(80,80,90,0.9)" transform="rotate(144)"/>
+                                    <path d="M 0,-38 L 3,-45 L -3,-45 Z" fill="rgba(80,80,90,0.9)" transform="rotate(180)"/>
+                                    <path d="M 0,-38 L 3,-45 L -3,-45 Z" fill="rgba(80,80,90,0.9)" transform="rotate(216)"/>
+                                    <path d="M 0,-38 L 3,-45 L -3,-45 Z" fill="rgba(80,80,90,0.9)" transform="rotate(252)"/>
+                                    <path d="M 0,-38 L 3,-45 L -3,-45 Z" fill="rgba(80,80,90,0.9)" transform="rotate(288)"/>
+                                    <path d="M 0,-38 L 3,-45 L -3,-45 Z" fill="rgba(80,80,90,0.9)" transform="rotate(324)"/>
+                                </g>
+                            </g>
+                            
+                            <!-- テープストリップ -->
+                            <rect x="298" y="301" width="164" height="8" fill="url(#tapeGrad)"/>
+                            
+                            <!-- 底部の丸穴 -->
+                            <g id="bottom-holes">
+                                <circle cx="120" cy="385" r="10" fill="rgba(0,0,0,0.15)" stroke="rgba(150,150,170,0.4)" stroke-width="1"/>
+                                <circle cx="280" cy="385" r="8" fill="rgba(0,0,0,0.15)" stroke="rgba(150,150,170,0.4)" stroke-width="1"/>
+                                <circle cx="360" cy="385" r="6" fill="rgba(0,0,0,0.15)" stroke="rgba(150,150,170,0.4)" stroke-width="1"/>
+                                <circle cx="440" cy="385" r="8" fill="rgba(0,0,0,0.15)" stroke="rgba(150,150,170,0.4)" stroke-width="1"/>
+                                <circle cx="600" cy="385" r="10" fill="rgba(0,0,0,0.15)" stroke="rgba(150,150,170,0.4)" stroke-width="1"/>
+                            </g>
+                        </svg>
+                        
+                        <!-- EJECT時の演出 -->
+                        <div class="eject-overlay" id="ejectOverlay"></div>
+                    </div>
+                </div>
+
+                <!-- IC LOGIC TRANSPORT CONTROL -->
+                <div class="transport-label">IC LOGIC TRANSPORT CONTROL</div>
+
+                <!-- 下部操作エリア -->
+                <div class="lower-controls">
+                    <!-- POWERボタン -->
+                    <button class="power-button" id="powerButton">
+                        <span class="power-label">POWER</span>
+                        <div class="power-led" id="powerLed"></div>
+                    </button>
+
+                    <!-- PITCH CONTROL -->
+                    <div class="pitch-control">
+                        <label>PITCH CONTROL</label>
+                        <div class="knob-container">
+                            <div class="knob" id="pitchKnob">
+                                <div class="knob-indicator"></div>
+                            </div>
+                        </div>
+                        <span class="pitch-label-small">(TAPE 1 ONLY)</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 右側: ディスプレイ・操作パネル -->
+            <div class="control-panel">
+                <!-- 上部ディスプレイエリア -->
+                <div class="display-area">
+                    <!-- レベルメーター -->
+                    <div class="meter-section">
+                        <div class="meter-label">LEVEL</div>
+                        <div class="meter-container">
+                            <!-- 左チャンネル -->
+                            <div class="meter-channel">
+                                <span class="channel-label">L</span>
+                                <div class="meter-bar">
+                                    <div class="meter-led" data-level="1"></div>
+                                    <div class="meter-led" data-level="2"></div>
+                                    <div class="meter-led" data-level="3"></div>
+                                    <div class="meter-led" data-level="4"></div>
+                                    <div class="meter-led" data-level="5"></div>
+                                    <div class="meter-led" data-level="6"></div>
+                                    <div class="meter-led" data-level="7"></div>
+                                    <div class="meter-led warn" data-level="8"></div>
+                                    <div class="meter-led warn" data-level="9"></div>
+                                    <div class="meter-led peak" data-level="10"></div>
+                                </div>
+                            </div>
+                            <!-- 右チャンネル -->
+                            <div class="meter-channel">
+                                <span class="channel-label">R</span>
+                                <div class="meter-bar">
+                                    <div class="meter-led" data-level="1"></div>
+                                    <div class="meter-led" data-level="2"></div>
+                                    <div class="meter-led" data-level="3"></div>
+                                    <div class="meter-led" data-level="4"></div>
+                                    <div class="meter-led" data-level="5"></div>
+                                    <div class="meter-led" data-level="6"></div>
+                                    <div class="meter-led" data-level="7"></div>
+                                    <div class="meter-led warn" data-level="8"></div>
+                                    <div class="meter-led warn" data-level="9"></div>
+                                    <div class="meter-led peak" data-level="10"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- カウンターディスプレイ -->
+                    <div class="counter-display">
+                        <button class="counter-reset-btn" id="counterResetBtn">COUNTER RESET</button>
+                        <div class="counter" id="counter">00:00</div>
+                        <div class="counter-unit" id="duration">00:00</div>
+                    </div>
+                </div>
+
+                <!-- ステータスインジケーター -->
+                <div class="status-indicators">
+                    <button class="status-button" id="returnToZeroBtn">RETURN TO ZERO</button>
+                    <span class="status-spacer">DIMMER</span>
+                    <span class="status-spacer">REPEAT</span>
+                    <span class="status-spacer">PARALLEL REC</span>
+                </div>
+
+                <!-- 録音・一時停止ボタン -->
+                <div class="record-pause-row">
+                    <button class="function-button record-button" id="recordButton">
+                        <div class="button-led"></div>
+                        <span>RECORD</span>
+                    </button>
+                    <button class="function-button pause-button" id="pauseButton">
+                        <div class="button-led"></div>
+                        <span>PAUSE</span>
+                    </button>
+                    <button class="function-button mute-button" id="recMuteButton">
+                        <span>REC MUTE</span>
+                    </button>
+                </div>
+
+                <!-- トランスポートボタン -->
+                <div class="transport-buttons">
+                    <button class="transport-button rew-button" id="rewButton">
+                        <div class="button-icon">⏪</div>
+                        <span>REW</span>
+                    </button>
+                    <button class="transport-button fwd-button" id="fwdButton">
+                        <div class="button-icon">⏩</div>
+                        <span>F FWD</span>
+                    </button>
+                </div>
+
+                <!-- STOP・PLAYボタン -->
+                <div class="main-transport">
+                    <button class="main-button stop-button" id="stopButton">
+                        <div class="button-icon">■</div>
+                        <span>STOP</span>
+                    </button>
+                    <button class="main-button play-button" id="playButton">
+                        <div class="button-icon">▶</div>
+                        <span>PLAY</span>
+                    </button>
+                </div>
+
+                <!-- EJECT・REC LEVEL -->
+                <div class="bottom-controls">
+                    <button class="eject-button" id="ejectButton">
+                        <div class="eject-icon">⏏</div>
+                        <span>EJECT</span>
+                    </button>
+
+                    <!-- MICレベル -->
+                    <div class="mic-control">
+                        <span class="mic-label">MIC</span>
+                        <div class="small-knob" id="micKnob"></div>
+                    </div>
+
+                    <!-- REC LEVEL -->
+                    <div class="rec-level-control">
+                        <label>REC LEVEL</label>
+                        <div class="large-knob" id="recLevelKnob">
+                            <div class="knob-indicator"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- テープ劣化ゲージ -->
+        <div class="tape-wear-display">
+            <span class="wear-label">TAPE CONDITION:</span>
+            <div class="wear-bar">
+                <div class="wear-fill" id="wearFill"></div>
+            </div>
+            <span class="wear-status" id="wearStatus">EXCELLENT</span>
+        </div>
+
+        <!-- 情報表示 -->
+        <div class="info-panel">
+            <div class="info-item">
+                <span class="info-label">STATUS:</span>
+                <span class="info-value" id="statusText">STOPPED</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">FILE:</span>
+                <span class="info-value" id="fileName">---</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 音声プレーヤー（非表示） -->
+    <audio id="audioPlayer" preload="auto"></audio>
+
+    <script src="audio-deck-main.js"></script>
+</body>
+</html>
