@@ -1,0 +1,859 @@
+/* ===================================
+   ファイル選択エリア
+   =================================== */
+.file-select-area {
+    background: linear-gradient(180deg, #2a2a2a 0%, #1a1a1a 100%);
+    border: 2px solid #3a3a3a;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+}
+
+.file-select-label {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 15px 30px;
+    background: linear-gradient(180deg, #3a3a3a 0%, #2a2a2a 100%);
+    border: 2px solid #4a4a4a;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+}
+
+.file-select-label:hover {
+    background: linear-gradient(180deg, #4a4a4a 0%, #3a3a3a 100%);
+    border-color: var(--accent-orange);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(255, 107, 0, 0.3);
+}
+
+.file-icon {
+    font-size: 24px;
+}
+
+.file-text {
+    font-size: 16px;
+    color: #ddd;
+    font-weight: 600;
+    letter-spacing: 1px;
+}
+
+.file-hint {
+    font-size: 11px;
+    color: #888;
+    letter-spacing: 0.5px;
+}
+
+.file-info {
+    font-size: 13px;
+    color: var(--display-text);
+    text-shadow: 0 0 4px var(--display-text);
+    padding: 8px 16px;
+    background: rgba(0, 255, 204, 0.1);
+    border: 1px solid rgba(0, 255, 204, 0.3);
+    border-radius: 4px;
+    min-width: 300px;
+    text-align: center;
+}
+
+.file-info.loaded {
+    color: var(--accent-orange);
+    text-shadow: 0 0 4px var(--accent-orange);
+    border-color: var(--accent-orange);
+    background: rgba(255, 107, 0, 0.1);
+}
+
+/* ===================================
+   グローバル設定
+   =================================== */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+:root {
+    /* カラーパレット */
+    --bg-dark: #0a0a0a;
+    --deck-body: #1a1a1a;
+    --deck-frame: #2a2a2a;
+    --metal-dark: #333333;
+    --metal-light: #555555;
+    --accent-orange: #ff6b00;
+    --accent-red: #ff0000;
+    --led-green: #00ff00;
+    --led-orange: #ffaa00;
+    --led-red: #ff0000;
+    --display-bg: #0d1a1a;
+    --display-text: #00ffcc;
+    --button-inactive: #2a2a2a;
+    --button-active: #ff6b00;
+    
+    /* フォント */
+    --font-main: 'Courier New', 'Consolas', monospace;
+    --font-display: 'Digital-7', 'Orbitron', monospace;
+    
+    /* カセット実寸比 */
+    --cassette-aspect-ratio: 1.587;
+    --reel-center-left: 25%;
+    --reel-center-right: 75%;
+    --reel-center-y: 50%;
+    --reel-size: 45%;
+    --tape-strip-inset: 27%;
+}
+
+body {
+    font-family: var(--font-main);
+    background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 50%, #0a0a0a 100%);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    overflow-x: hidden;
+}
+
+.container {
+    max-width: 1200px;
+    width: 100%;
+}
+
+/* ===================================
+   カセット窓とSVG
+   =================================== */
+.cassette-window {
+    background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
+    border: 3px solid #2a2a2a;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 
+        inset 0 4px 20px rgba(0, 0, 0, 0.9),
+        0 2px 8px rgba(0, 0, 0, 0.5);
+    position: relative;
+    aspect-ratio: var(--cassette-aspect-ratio);
+    width: 100%;
+}
+
+.window-frame {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    border-radius: 4px;
+    border: 2px solid #1a1a1a;
+    overflow: hidden;
+}
+
+#cassette-tape-svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+}
+
+/* EJECT オーバーレイ */
+.eject-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0);
+    pointer-events: none;
+    transition: background 0.3s ease;
+}
+
+.eject-overlay.active {
+    background: rgba(0, 0, 0, 0.7);
+}
+
+/* ===================================
+   タイトルバー
+   =================================== */
+.title-bar {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 15px 20px;
+    background: linear-gradient(180deg, #2a2a2a 0%, #1a1a1a 100%);
+    border-radius: 8px 8px 0 0;
+    border: 1px solid #3a3a3a;
+    border-bottom: none;
+}
+
+.brand-logo svg {
+    filter: drop-shadow(0 0 3px rgba(255, 255, 255, 0.3));
+}
+
+.deck-title {
+    font-size: 24px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    color: #888;
+    text-shadow: 0 0 10px rgba(255, 107, 0, 0.3);
+    font-family: 'Helvetica', 'Arial', sans-serif;
+}
+
+/* ===================================
+   デッキ本体
+   =================================== */
+.deck-body {
+    background: linear-gradient(180deg, #1a1a1a 0%, #0f0f0f 100%);
+    border: 2px solid #3a3a3a;
+    border-radius: 0 0 8px 8px;
+    padding: 30px;
+    display: grid;
+    grid-template-columns: 1.2fr 1fr;
+    gap: 30px;
+    box-shadow: 
+        inset 0 2px 10px rgba(0, 0, 0, 0.8),
+        0 10px 40px rgba(0, 0, 0, 0.9);
+    position: relative;
+}
+
+/* ===================================
+   左側: カセットセクション
+   =================================== */
+.cassette-section {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.deck-label {
+    font-size: 9px;
+    letter-spacing: 2px;
+    color: #666;
+    text-align: center;
+    font-weight: 600;
+}
+
+.transport-label {
+    font-size: 8px;
+    letter-spacing: 1.5px;
+    color: #555;
+    text-align: center;
+    margin-top: 10px;
+}
+
+/* 下部コントロール */
+.lower-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 15px;
+    border-top: 1px solid #2a2a2a;
+}
+
+/* POWERボタン */
+.power-button {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    background: #1a1a1a;
+    border: 2px solid #2a2a2a;
+    border-radius: 4px;
+    padding: 12px 20px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.power-button:hover {
+    background: #252525;
+    border-color: #3a3a3a;
+}
+
+.power-label {
+    font-size: 10px;
+    letter-spacing: 1px;
+    color: #666;
+}
+
+.power-led {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: #1a1a1a;
+    border: 1px solid #2a2a2a;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.8);
+    transition: all 0.3s;
+}
+
+.power-led.on {
+    background: var(--led-green);
+    box-shadow: 
+        0 0 8px var(--led-green),
+        0 0 16px rgba(0, 255, 0, 0.5),
+        inset 0 0 4px rgba(255, 255, 255, 0.5);
+}
+
+/* PITCH CONTROL */
+.pitch-control {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+}
+
+.pitch-control label {
+    font-size: 9px;
+    letter-spacing: 1px;
+    color: #666;
+}
+
+.knob {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 30% 30%, #3a3a3a 0%, #1a1a1a 100%);
+    border: 3px solid #2a2a2a;
+    box-shadow: 
+        0 4px 12px rgba(0, 0, 0, 0.8),
+        inset 0 -2px 8px rgba(0, 0, 0, 0.5),
+        inset 0 2px 4px rgba(255, 255, 255, 0.1);
+    cursor: pointer;
+    position: relative;
+}
+
+.knob-indicator {
+    position: absolute;
+    top: 8px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 3px;
+    height: 12px;
+    background: var(--accent-orange);
+    border-radius: 2px;
+    box-shadow: 0 0 4px var(--accent-orange);
+}
+
+.pitch-label-small {
+    font-size: 7px;
+    color: #555;
+    letter-spacing: 0.5px;
+}
+
+/* ===================================
+   右側: コントロールパネル
+   =================================== */
+.control-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+/* ディスプレイエリア */
+.display-area {
+    background: var(--display-bg);
+    border: 3px solid #0a0a0a;
+    border-radius: 6px;
+    padding: 15px;
+    box-shadow: 
+        inset 0 4px 20px rgba(0, 0, 0, 0.9),
+        0 2px 8px rgba(0, 255, 204, 0.1);
+}
+
+/* レベルメーター */
+.meter-section {
+    margin-bottom: 15px;
+}
+
+.meter-label {
+    font-size: 8px;
+    letter-spacing: 2px;
+    color: var(--display-text);
+    margin-bottom: 8px;
+    text-shadow: 0 0 4px var(--display-text);
+}
+
+.meter-container {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.meter-channel {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.channel-label {
+    font-size: 10px;
+    color: var(--display-text);
+    font-weight: bold;
+    min-width: 12px;
+}
+
+.meter-bar {
+    display: flex;
+    gap: 3px;
+    flex: 1;
+}
+
+.meter-led {
+    flex: 1;
+    height: 12px;
+    background: rgba(0, 255, 0, 0.1);
+    border: 1px solid rgba(0, 255, 0, 0.2);
+    border-radius: 2px;
+    transition: all 0.1s;
+}
+
+.meter-led.active {
+    background: var(--led-green);
+    border-color: var(--led-green);
+    box-shadow: 
+        0 0 6px var(--led-green),
+        inset 0 0 4px rgba(255, 255, 255, 0.5);
+}
+
+.meter-led.warn {
+    background: rgba(255, 170, 0, 0.1);
+    border-color: rgba(255, 170, 0, 0.2);
+}
+
+.meter-led.warn.active {
+    background: var(--led-orange);
+    border-color: var(--led-orange);
+    box-shadow: 
+        0 0 6px var(--led-orange),
+        inset 0 0 4px rgba(255, 255, 255, 0.5);
+}
+
+.meter-led.peak {
+    background: rgba(255, 0, 0, 0.1);
+    border-color: rgba(255, 0, 0, 0.2);
+}
+
+.meter-led.peak.active {
+    background: var(--led-red);
+    border-color: var(--led-red);
+    box-shadow: 
+        0 0 8px var(--led-red),
+        inset 0 0 4px rgba(255, 255, 255, 0.5);
+}
+
+/* カウンターディスプレイ */
+.counter-display {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 10px 15px;
+    background: rgba(0, 0, 0, 0.5);
+    border: 2px solid rgba(0, 255, 204, 0.2);
+    border-radius: 4px;
+}
+
+.counter-reset-btn {
+    font-size: 7px;
+    letter-spacing: 1px;
+    color: #666;
+    background: transparent;
+    border: 1px solid #2a2a2a;
+    padding: 4px 8px;
+    border-radius: 3px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.counter-reset-btn:hover {
+    color: var(--accent-orange);
+    border-color: var(--accent-orange);
+}
+
+.counter {
+    font-family: var(--font-display);
+    font-size: 32px;
+    color: var(--display-text);
+    letter-spacing: 4px;
+    text-shadow: 0 0 10px var(--display-text);
+    font-weight: bold;
+    min-width: 120px;
+    text-align: center;
+}
+
+.counter-unit {
+    font-family: var(--font-display);
+    font-size: 18px;
+    color: rgba(0, 255, 204, 0.5);
+    letter-spacing: 2px;
+}
+
+/* ステータスインジケーター */
+.status-indicators {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 15px;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 4px;
+    font-size: 8px;
+    letter-spacing: 1px;
+    color: #555;
+}
+
+.status-button {
+    background: transparent;
+    border: 1px solid #2a2a2a;
+    color: #666;
+    padding: 4px 10px;
+    border-radius: 3px;
+    font-size: 8px;
+    letter-spacing: 1px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.status-button:hover {
+    color: var(--accent-orange);
+    border-color: var(--accent-orange);
+}
+
+/* ボタン共通スタイル */
+.function-button, .transport-button, .main-button {
+    background: linear-gradient(180deg, #2a2a2a 0%, #1a1a1a 100%);
+    border: 2px solid #3a3a3a;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.function-button:hover, .transport-button:hover, .main-button:hover {
+    background: linear-gradient(180deg, #3a3a3a 0%, #2a2a2a 100%);
+    border-color: #4a4a4a;
+}
+
+.function-button.active, .transport-button.active, .main-button.active {
+    border-color: var(--accent-orange);
+}
+
+/* 録音・一時停止ボタン行 */
+.record-pause-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 10px;
+}
+
+.function-button {
+    padding: 12px;
+    gap: 6px;
+}
+
+.button-led {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #1a1a1a;
+    border: 1px solid #2a2a2a;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.8);
+    transition: all 0.3s;
+}
+
+.function-button.active .button-led {
+    background: var(--led-red);
+    box-shadow: 
+        0 0 8px var(--led-red),
+        0 0 16px rgba(255, 0, 0, 0.5),
+        inset 0 0 4px rgba(255, 255, 255, 0.5);
+}
+
+.function-button span, .transport-button span, .main-button span {
+    font-size: 9px;
+    letter-spacing: 1px;
+    color: #888;
+}
+
+.function-button.active span, .transport-button.active span, .main-button.active span {
+    color: var(--accent-orange);
+}
+
+/* トランスポートボタン */
+.transport-buttons {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+.transport-button {
+    padding: 15px;
+    gap: 6px;
+}
+
+.button-icon {
+    font-size: 18px;
+    color: #888;
+}
+
+.transport-button.active .button-icon, .main-button.active .button-icon {
+    color: var(--accent-orange);
+}
+
+/* メイントランスポート */
+.main-transport {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+}
+
+.main-button {
+    padding: 20px;
+    gap: 8px;
+    border-width: 3px;
+}
+
+.main-button .button-icon {
+    font-size: 28px;
+}
+
+/* 下部コントロール */
+.bottom-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 15px;
+}
+
+/* EJECTボタン */
+.eject-button {
+    background: linear-gradient(180deg, #2a2a2a 0%, #1a1a1a 100%);
+    border: 2px solid #3a3a3a;
+    border-radius: 4px;
+    padding: 15px 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.eject-button:hover {
+    background: linear-gradient(180deg, #3a3a3a 0%, #2a2a2a 100%);
+}
+
+.eject-icon {
+    font-size: 20px;
+    color: #888;
+}
+
+.eject-button span {
+    font-size: 9px;
+    letter-spacing: 1px;
+    color: #888;
+}
+
+/* MICコントロール */
+.mic-control {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+}
+
+.mic-label {
+    font-size: 8px;
+    letter-spacing: 1px;
+    color: #666;
+}
+
+.small-knob {
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 30% 30%, #3a3a3a 0%, #1a1a1a 100%);
+    border: 2px solid #2a2a2a;
+    box-shadow: 
+        0 3px 8px rgba(0, 0, 0, 0.8),
+        inset 0 -1px 4px rgba(0, 0, 0, 0.5);
+    cursor: pointer;
+}
+
+/* REC LEVELコントロール */
+.rec-level-control {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+}
+
+.rec-level-control label {
+    font-size: 8px;
+    letter-spacing: 1px;
+    color: #666;
+}
+
+.large-knob {
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 30% 30%, #3a3a3a 0%, #1a1a1a 100%);
+    border: 4px solid #2a2a2a;
+    box-shadow: 
+        0 5px 15px rgba(0, 0, 0, 0.9),
+        inset 0 -3px 12px rgba(0, 0, 0, 0.7),
+        inset 0 3px 6px rgba(255, 255, 255, 0.1);
+    cursor: pointer;
+    position: relative;
+}
+
+.large-knob .knob-indicator {
+    position: absolute;
+    top: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 4px;
+    height: 18px;
+    background: var(--accent-orange);
+    border-radius: 2px;
+    box-shadow: 0 0 6px var(--accent-orange);
+}
+
+.knob-scale {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+}
+
+.scale-mark {
+    position: absolute;
+    top: -18px;
+    left: 50%;
+    transform-origin: 35px 53px;
+    font-size: 8px;
+    color: #555;
+    font-weight: bold;
+}
+
+/* ===================================
+   テープ劣化ディスプレイ
+   =================================== */
+.tape-wear-display {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 15px 20px;
+    background: rgba(26, 26, 26, 0.8);
+    border: 1px solid #2a2a2a;
+    border-radius: 6px;
+    margin-top: 20px;
+}
+
+.wear-label {
+    font-size: 10px;
+    letter-spacing: 1px;
+    color: #888;
+    white-space: nowrap;
+}
+
+.wear-bar {
+    flex: 1;
+    height: 20px;
+    background: rgba(0, 0, 0, 0.5);
+    border: 2px solid #2a2a2a;
+    border-radius: 10px;
+    overflow: hidden;
+    position: relative;
+}
+
+.wear-fill {
+    height: 100%;
+    background: linear-gradient(90deg, 
+        var(--led-green) 0%, 
+        var(--led-orange) 50%, 
+        var(--led-red) 100%);
+    width: 0%;
+    transition: width 0.5s ease;
+    box-shadow: 0 0 10px rgba(255, 107, 0, 0.5);
+}
+
+.wear-status {
+    font-size: 10px;
+    letter-spacing: 1px;
+    color: var(--led-green);
+    font-weight: bold;
+    min-width: 80px;
+    text-align: right;
+    text-shadow: 0 0 4px currentColor;
+}
+
+/* ===================================
+   情報パネル
+   =================================== */
+.info-panel {
+    display: flex;
+    justify-content: space-around;
+    padding: 15px 20px;
+    background: rgba(26, 26, 26, 0.5);
+    border: 1px solid #2a2a2a;
+    border-radius: 6px;
+    margin-top: 10px;
+}
+
+.info-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.info-label {
+    font-size: 9px;
+    letter-spacing: 1px;
+    color: #666;
+}
+
+.info-value {
+    font-size: 11px;
+    letter-spacing: 1px;
+    color: var(--display-text);
+    font-weight: bold;
+    text-shadow: 0 0 4px var(--display-text);
+}
+
+/* ===================================
+   レスポンシブ
+   =================================== */
+@media (max-width: 1024px) {
+    .deck-body {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 768px) {
+    body {
+        padding: 5px;
+    }
+    
+    .deck-body {
+        padding: 12px;
+        gap: 12px;
+    }
+    
+    .cassette-window {
+        padding: 10px;
+    }
+}
+
+/* ===================================
+   アニメーション
+   =================================== */
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; }
+}
+
+.pulsing {
+    animation: pulse 1s ease-in-out infinite;
+}
